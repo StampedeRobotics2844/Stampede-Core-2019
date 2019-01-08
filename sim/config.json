@@ -10,11 +10,7 @@
         "field": {
             "h": 39,
             "w": 27,
-            "px_per_ft": 15,
-            "image": "2018-field.gif",
-            "game_specific_messages": [
-                "RRR", "RLR", "RLL", "LLR", "LRL", "LLL"
-            ]
+            "px_per_ft": 15
         }
     }
 }
