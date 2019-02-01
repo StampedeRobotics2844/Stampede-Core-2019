@@ -9,6 +9,6 @@ motors.right_drive = 9
 
 joysticks = PortMap()
 
-joysticks.left_joystick = 0
-joysticks.right_joystick = 1
+joysticks.left_joystick = 1
+joysticks.right_joystick = 0
 

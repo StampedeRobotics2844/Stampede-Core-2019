@@ -1,2 +1,2 @@
-# stampede-core-2018
-FRC Competition robot code for 2018
+# stampede-core-2019
+FRC Competition robot code for 2019

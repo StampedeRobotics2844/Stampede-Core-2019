@@ -21,7 +21,7 @@ class StampedeRobot(wpilib.IterativeRobot):
     def __init__(self):
         super().__init__()
 
-        self.logger = logging.getLogger("Gladius")
+        self.logger = logging.getLogger("Zil")
 
         self.smart_dashboard = None
         self.motor_speed_stop = 0
@@ -49,30 +49,32 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.gyro = None
         self.accel = None
 
+    '''
+    First time initialization of robot, this happens after the robo rio has booted up, 
+    and the code is run for the first time.
+    '''
     def robotInit(self):
         '''Robot-wide Initialization code'''
-        #Initializing Smart Dashboard
-        self.smart_dashboard = NetworkTables.getTable("SmartDashboard")
-
+  
         #Initializing networktables
         self.smart_dashboard = NetworkTables.getTable("SmartDashboard")
         self.smart_dashboard.putNumber('robot_speed', 1)
 
         # initialize and launch the camera
-        # wpilib.CameraServer.launch()
+        wpilib.CameraServer.launch()
 
+        # initialize the left and right encoders.
         self.encoder_wheel_left = wpilib.Encoder(0,1,True,wpilib.Encoder.EncodingType.k4X)
         self.encoder_wheel_right = wpilib.Encoder(2,3,False,wpilib.Encoder.EncodingType.k4X)
 
         self.encoder_wheel_left.setDistancePerPulse(self.kDistancePerPulse)
         self.encoder_wheel_right.setDistancePerPulse(self.kDistancePerPulse)
-        self.encoder_lift.setDistancePerPulse(self.kDistancePerPulse)
 
         #Initalizing drive motors
         self.drive_l_motor = wpilib.Spark(portmap.motors.left_drive)
         self.drive_r_motor = wpilib.Spark(portmap.motors.right_drive)
 
-        # initialize drive
+        # initialize drive (differential drive is tank drive)
         self.drive = wpilib.drive.DifferentialDrive(self.drive_l_motor, self.drive_r_motor)
         self.drive.setExpiration(0.1)
 
@@ -85,10 +87,10 @@ class StampedeRobot(wpilib.IterativeRobot):
 
         # self.range = wpilib.AnalogInput(0)
 
-        #self.rangeU = wpilib.Ultrasonic(0, 0)
+        # self.rangeU = wpilib.Ultrasonic(0, 0)
 
         # initialize Accelerometer
-        #self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
+        # self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
   
         # initialize autonomous components
         self.components = {
@@ -131,57 +133,34 @@ class StampedeRobot(wpilib.IterativeRobot):
 
         return distance
 
-
     def autonomousInit(self):
         self.drive.setSafetyEnabled(True)
-        self.encoder_wheel_left.reset()
-        self.encoder_wheel_right.reset()
-        self.gyro.calibrate()
-        self.gameData = self.getGameSpecificData()
-        self.logger.log(logging.INFO, "Game Data: {0}".format(self.gameData))
+        #self.encoder_wheel_left.reset()
+        #self.encoder_wheel_right.reset()
+        #self.gyro.calibrate()
 
     def autonomousPeriodic(self):
-        self.automodes.run()
-        
-    def disabledInit(self):
-        '''Called only at the beginning of disabled mode'''
-        pass
+        self.automodes.run() 
     
-    def disabledPeriodic(self):
-        '''Called every 20ms in disabled mode'''
-        pass
-
-    def teleopInit(self):
-        '''Called only at the beginning of teleoperated mode'''
-        self.drive.setSafetyEnabled(True)
-        self.encoder_wheel_left.reset()
-        self.encoder_wheel_right.reset()
-        self.encoder_lift.reset()
-        self.gyro.calibrate()
-
     def teleopPeriodic(self):
         '''Called every 20ms in teleoperated mode'''
         
         try:
-
-            self.drive.tankDrive(self.left_stick.getY() * 0.7, self.right_stick.getY() * 0.7, False)
+            self.drive.tankDrive(self.left_stick.getY() * -1, self.right_stick.getY() * -1, False)
 
         except:
             if not self.isFMSAttached():
                 raise
 
-        # self.logger.log(logging.INFO, "distance wheel left: {0}".format(self.encoder_wheel_left.getDistance()))
-        # self.logger.log(logging.INFO, "distance wheel right: {0}".format(self.encoder_wheel_right.getDistance()))
-        # self.logger.log(logging.INFO, "distance lift: {0}".format(self.encoder_lift.getDistance()))
-        # self.logger.log(logging.INFO, "gyro angle: {0}".format(self.gyro.getAngle()))
-        # self.logger.log(logging.INFO, "range: {0}".format(self.getDistance()))
-        #self.logger.log(logging.INFO, "accel x, y, z: {0}, {1}, {2}".format(self.accel.getX(), self.accel.getY(), self.accel.getZ()))
+        self.logger.log(logging.INFO, "distance wheel left: {0}".format(self.encoder_wheel_left.getDistance()))
+        self.logger.log(logging.INFO, "distance wheel right: {0}".format(self.encoder_wheel_right.getDistance()))
+        self.logger.log(logging.INFO, "distance lift: {0}".format(self.encoder_lift.getDistance()))
+        self.logger.log(logging.INFO, "gyro angle: {0}".format(self.gyro.getAngle()))
+        self.logger.log(logging.INFO, "range: {0}".format(self.getDistance()))
+        self.logger.log(logging.INFO, "accel x, y, z: {0}, {1}, {2}".format(self.accel.getX(), self.accel.getY(), self.accel.getZ()))
 
     def isFMSAttached(self):
         return wpilib.DriverStation.getInstance().isFMSAttached()
 
     def getGameSpecificData(self):
         return wpilib.DriverStation.getInstance().getGameSpecificMessage()
-
-if __name__ == '__main__':
-    wpilib.run(StampedeRobot)
