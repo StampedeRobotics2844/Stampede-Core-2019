@@ -27,6 +27,7 @@ wheels/
 opkg_cache/
 pip_cache/
 _config.yml
+.pytest_cache/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
