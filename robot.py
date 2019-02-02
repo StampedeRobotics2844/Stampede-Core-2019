@@ -65,7 +65,10 @@ class StampedeRobot(wpilib.IterativeRobot):
 
         # initialize the left and right encoders.
         self.encoder_wheel_left = wpilib.Encoder(0,1,True,wpilib.Encoder.EncodingType.k4X)
+        self.encoder_wheel_left.reset()
+
         self.encoder_wheel_right = wpilib.Encoder(2,3,False,wpilib.Encoder.EncodingType.k4X)
+        self.encoder_wheel_right.reset()
 
         self.encoder_wheel_left.setDistancePerPulse(self.kDistancePerPulse)
         self.encoder_wheel_right.setDistancePerPulse(self.kDistancePerPulse)
@@ -83,15 +86,16 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.right_stick = wpilib.Joystick(portmap.joysticks.right_joystick)
 
         # initialize gyro
-        # self.gyro = wpilib.ADXRS450_Gyro(wpilib.SPI.Port.kOnboardCS2)
+        self.gyro = wpilib.ADXRS450_Gyro(wpilib.SPI.Port.kOnboardCS2)
+        self.gyro.calibrate()
 
-        # self.range = wpilib.AnalogInput(0)
-
-        # self.rangeU = wpilib.Ultrasonic(0, 0)
+        # initialize the ultra sonic 
+        self.range = wpilib.AnalogInput(0)
+        self.rangeU = wpilib.Ultrasonic(0, 0)
 
         # initialize Accelerometer
-        # self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
-  
+        self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
+
         # initialize autonomous components
         self.components = {
             'drive': self.drive,
@@ -137,7 +141,7 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.drive.setSafetyEnabled(True)
         #self.encoder_wheel_left.reset()
         #self.encoder_wheel_right.reset()
-        #self.gyro.calibrate()
+        #
 
     def autonomousPeriodic(self):
         self.automodes.run() 
@@ -164,3 +168,6 @@ class StampedeRobot(wpilib.IterativeRobot):
 
     def getGameSpecificData(self):
         return wpilib.DriverStation.getInstance().getGameSpecificMessage()
+
+if __name__ == '__main__':
+    wpilib.run(StampedeRobot)
