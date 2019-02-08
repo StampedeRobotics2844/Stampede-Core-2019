@@ -49,6 +49,7 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.gyro = None
         self.accel = None
 
+
     '''
     First time initialization of robot, this happens after the robo rio has booted up, 
     and the code is run for the first time.
@@ -86,15 +87,14 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.right_stick = wpilib.Joystick(portmap.joysticks.right_joystick)
 
         # initialize gyro
-        self.gyro = wpilib.ADXRS450_Gyro(wpilib.SPI.Port.kOnboardCS2)
-        self.gyro.calibrate()
+        self.gyro = wpilib.AnalogGyro(wpilib.AnalogInput(1))
 
         # initialize the ultra sonic 
-        # self.range = wpilib.AnalogInput(0)
+        self.range = wpilib.AnalogInput(0)
         # self.rangeU = wpilib.Ultrasonic(0, 0)
 
         # initialize Accelerometer
-        # self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
+        #self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
 
         # initialize autonomous components
         self.components = {
@@ -141,16 +141,28 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.drive.setSafetyEnabled(True)
         #self.encoder_wheel_left.reset()
         #self.encoder_wheel_right.reset()
-        #
 
     def autonomousPeriodic(self):
         self.automodes.run() 
+
+    def disabledInit(self):
+        '''Called only at the beginning of disabled mode'''
+        pass
+    
+    def disabledPeriodic(self):
+        '''Called every 20ms in disabled mode'''
+        pass
+            
+    def teleopInit(self):
+        '''Called only at the beginning of teleoperated mode'''
+        self.drive.setSafetyEnabled(True)
+        self.gyro.calibrate()
     
     def teleopPeriodic(self):
         '''Called every 20ms in teleoperated mode'''
         
         try:
-            self.drive.tankDrive(self.left_stick.getY() * -1, self.right_stick.getY() * -1, False)
+            self.drive.tankDrive(self.left_stick.getY() * 1, self.right_stick.getY() * 1, False)
 
         except:
             if not self.isFMSAttached():
@@ -159,8 +171,8 @@ class StampedeRobot(wpilib.IterativeRobot):
         #self.logger.log(logging.INFO, "distance wheel left: {0}".format(self.encoder_wheel_left.getDistance()))
         #self.logger.log(logging.INFO, "distance wheel right: {0}".format(self.encoder_wheel_right.getDistance()))
         #self.logger.log(logging.INFO, "distance lift: {0}".format(self.encoder_lift.getDistance()))
-        #self.logger.log(logging.INFO, "gyro angle: {0}".format(self.gyro.getAngle()))
-        #self.logger.log(logging.INFO, "range: {0}".format(self.getDistance()))
+        self.logger.log(logging.INFO, "gyro angle: {0}".format(self.gyro.getAngle()))
+        self.logger.log(logging.INFO, "range: {0}".format(self.getDistance()))
         #self.logger.log(logging.INFO, "accel x, y, z: {0}, {1}, {2}".format(self.accel.getX(), self.accel.getY(), self.accel.getZ()))
 
     def isFMSAttached(self):
