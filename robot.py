@@ -1,27 +1,25 @@
 '''
-Steampede 2018
+Steampede 2019
 Betty H. Fairfax
-Team 2844 @2018
+Team 2844 @2019
 bfhsroboticsclub@gmail.com
 '''
-
+import logging
 import wpilib
 import wpilib.drive
-import logging
 import portmap
 
 from robotpy_ext.autonomous import StatefulAutonomous, timed_state
 from networktables import NetworkTables
 from robotpy_ext.autonomous import AutonomousModeSelector
+from wpilib.builtinaccelerometer import Accelerometer
 
 # logging.basicConfig(level=logging.DEBUG)
 
-class StampedeRobot(wpilib.IterativeRobot):
+class StampedeRobot(wpilib.TimedRobot):
     '''Main robot class'''
     def __init__(self):
         super().__init__()
-
-        # self.logger = logging.getLogger("Zil")
 
         self.smart_dashboard = None
         self.motor_speed_stop = 0
@@ -80,7 +78,7 @@ class StampedeRobot(wpilib.IterativeRobot):
 
         # initialize drive (differential drive is tank drive)
         self.drive = wpilib.drive.DifferentialDrive(self.drive_l_motor, self.drive_r_motor)
-        # self.drive.setExpiration(0.1)
+        self.drive.setExpiration(0.1)
 
         # joysticks 1 & 2 on the driver station
         self.left_stick = wpilib.Joystick(portmap.joysticks.left_joystick)
@@ -104,10 +102,13 @@ class StampedeRobot(wpilib.IterativeRobot):
             'encoder_wheel_left' : self.encoder_wheel_left,
             'encoder_wheel_right' : self.encoder_wheel_right,
             'gyro' : self.gyro,
-            'range' : self.range
+            'range' : self.range,
+            'accelerometer' : self.accelerometer
         }
 
         self.automodes = AutonomousModeSelector('autonomous', self.components)
+
+        self.logger.log(logging.INFO, "robot initialization complete.")
 
     def getDistance(self):
         '''
@@ -133,7 +134,7 @@ class StampedeRobot(wpilib.IterativeRobot):
         distance = 5 * (measured_voltages/voltage_scaling)
         mmToInchScaling = 0.03937007874
 
-        # self.logger.log(logging.INFO, "measured voltage: {0}, distance: {1} mm, distnace: {2} inches".format(measured_voltages, distance, distance*mmToInchScaling))
+        self.logger.log(logging.INFO, "measured voltage: {0}, distance: {1} mm, distnace: {2} inches".format(measured_voltages, distance, distance*mmToInchScaling))
 
         return distance
 
@@ -158,6 +159,12 @@ class StampedeRobot(wpilib.IterativeRobot):
         self.drive.setSafetyEnabled(True)
         self.gyro.calibrate()
     
+    def disabledInit(self):
+        pass
+    
+    def teleopInit(self):
+        pass
+
     def teleopPeriodic(self):
         '''Called every 20ms in teleoperated mode'''
         
