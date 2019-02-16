@@ -31,6 +31,11 @@ class StampedeRobot(wpilib.TimedRobot):
         self.drive_r_motor = None
         self.drive_l_motor = None
 
+        self.claw_l_motor = None
+        self.claw_r_motor = None
+
+        self.lift_motor = None
+
         self.left_stick = None
         self.right_stick = None
         
@@ -43,9 +48,8 @@ class StampedeRobot(wpilib.TimedRobot):
         self.address= 0x53
 
         self.range = None
-        self.rangeU = None
         self.gyro = None
-        self.accel = None
+        self.accelerometer = None
 
 
     '''
@@ -73,8 +77,13 @@ class StampedeRobot(wpilib.TimedRobot):
         self.encoder_wheel_right.setDistancePerPulse(self.kDistancePerPulse)
 
         #Initalizing drive motors
-        self.drive_l_motor = wpilib.Spark(portmap.motors.left_drive)
-        self.drive_r_motor = wpilib.Spark(portmap.motors.right_drive)
+        self.drive_l_motor = wpilib.Victor(portmap.motors.left_drive)
+        self.drive_r_motor = wpilib.Victor(portmap.motors.right_drive)
+
+        self.claw_l_motor = wpilib.Victor(portmap.motors.left_claw)
+        self.claw_r_motor = wpilib.Victor(portmap.motors.right_claw)
+
+        self.lift_motor = wpilib.Victor(portmap.motors.lift)
 
         # initialize drive (differential drive is tank drive)
         self.drive = wpilib.drive.DifferentialDrive(self.drive_l_motor, self.drive_r_motor)
@@ -86,24 +95,27 @@ class StampedeRobot(wpilib.TimedRobot):
 
         # initialize gyro
         self.gyro = wpilib.AnalogGyro(wpilib.AnalogInput(1))
+        self.gyro.calibrate()
 
         # initialize the ultra sonic 
         self.range = wpilib.AnalogInput(0)
-        # self.rangeU = wpilib.Ultrasonic(0, 0)
 
         # initialize Accelerometer
-        #self.accel = wpilib.ADXL345_I2C(wpilib.I2C.Port.kMXP,wpilib.ADXL345_I2C.Range.k16G,0x1D)
+        self.accelerometer = wpilib.BuiltInAccelerometer(Accelerometer.Range.k4G)
 
         # initialize autonomous components
         self.components = {
             'drive': self.drive,
             'drive_r_motor': self.drive_r_motor,
             'drive_l_motor': self.drive_l_motor,
-            'encoder_wheel_left' : self.encoder_wheel_left,
-            'encoder_wheel_right' : self.encoder_wheel_right,
+            'claw_r_motor': self.claw_r_motor,
+            'claw_l_motor': self.claw_r_motor,
+            'lift_motor': self.lift_motor,
+            'encoder_wheel_right': self.encoder_wheel_right,
+            'encoder_wheel_left': self.encoder_wheel_left,
             'gyro' : self.gyro,
-            'range' : self.range,
-            'accelerometer' : self.accelerometer
+            'accelerometer': self.accelerometer,
+            'range' : self.range
         }
 
         self.automodes = AutonomousModeSelector('autonomous', self.components)
@@ -121,7 +133,7 @@ class StampedeRobot(wpilib.TimedRobot):
         
         Calculating the Range
         Once you know the voltage scaling it is easy to properly calculate the range.
-        
+
         The range formula is:
         [5*(Vm/Vi) = Ri]
         Vm = Measured Voltage
@@ -138,13 +150,36 @@ class StampedeRobot(wpilib.TimedRobot):
 
         return distance
 
+    def ClawOut(self):
+        self.claw_l_motor.set(-1)
+        self.claw_r_motor.set(1)
+        
+    def ClawIn(self):
+        self.claw_l_motor.set(0.5)
+        self.claw_r_motor.set(-0.5)
+
+    def ClawStop(self):
+        self.claw_l_motor.set(0)
+        self.claw_r_motor.set(0)
+
+    def LiftClockwise(self):
+        self.lift_motor.set(1)
+
+    def LiftCClockwise(self):
+        self.lift_motor.set(-1)
+    
+    def LiftStop(self):
+        self.lift_motor.set(0)
+
     def autonomousInit(self):
         self.drive.setSafetyEnabled(True)
         #self.encoder_wheel_left.reset()
         #self.encoder_wheel_right.reset()
+        pass
 
     def autonomousPeriodic(self):
         self.automodes.run() 
+        pass
 
     def disabledInit(self):
         '''Called only at the beginning of disabled mode'''
@@ -157,18 +192,26 @@ class StampedeRobot(wpilib.TimedRobot):
     def teleopInit(self):
         '''Called only at the beginning of teleoperated mode'''
         self.drive.setSafetyEnabled(True)
-        self.gyro.calibrate()
-    
-    def disabledInit(self):
-        pass
-    
-    def teleopInit(self):
-        pass
 
     def teleopPeriodic(self):
         '''Called every 20ms in teleoperated mode'''
         
         try:
+
+            if self.left_stick.getRawButton(portmap.joysticks.button_claw):
+                self.ClawOut()
+            elif self.right_stick.getRawButton(portmap.joysticks.button_claw):
+                self.ClawIn()
+            else:
+                self.ClawStop()
+                
+            if self.left_stick.getRawButton(portmap.joysticks.button_lift):
+                self.LiftClockwise()
+            elif self.right_stick.getRawButton(portmap.joysticks.button_lift):
+                self.LiftCClockwise()
+            else:
+                self.LiftStop()
+
             self.drive.tankDrive(self.left_stick.getY() * 1, self.right_stick.getY() * 1, False)
 
         except:
@@ -180,7 +223,7 @@ class StampedeRobot(wpilib.TimedRobot):
         #self.logger.log(logging.INFO, "distance lift: {0}".format(self.encoder_lift.getDistance()))
         self.logger.log(logging.INFO, "gyro angle: {0}".format(self.gyro.getAngle()))
         self.logger.log(logging.INFO, "range: {0}".format(self.getDistance()))
-        #self.logger.log(logging.INFO, "accel x, y, z: {0}, {1}, {2}".format(self.accel.getX(), self.accel.getY(), self.accel.getZ()))
+        self.logger.log(logging.INFO, "accelerometer x:{0} y:{1} z: {2}".format(self.accelerometer.getX(), self.accelerometer.getY(), self.accelerometer.getZ()))
 
     def isFMSAttached(self):
         return wpilib.DriverStation.getInstance().isFMSAttached()
