@@ -17,4 +17,4 @@ joysticks.left_joystick = 1
 joysticks.right_joystick = 0
 
 joysticks.button_claw = 1
-joysticks.button_lift = 2
+joysticks.button_liftp = 2

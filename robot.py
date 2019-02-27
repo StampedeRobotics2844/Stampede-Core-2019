@@ -4,6 +4,7 @@ Betty H. Fairfax
 Team 2844 @2019
 bfhsroboticsclub@gmail.com
 '''
+
 import logging
 import wpilib
 import wpilib.drive
@@ -44,6 +45,7 @@ class StampedeRobot(wpilib.TimedRobot):
         self.encoder_lift = None
 
         self.drive = None
+        self.robotnumber = None
 
         self.address= 0x53
 
@@ -58,11 +60,13 @@ class StampedeRobot(wpilib.TimedRobot):
     '''
     def robotInit(self):
         '''Robot-wide Initialization code'''
-  
+        self.robotnumber = wpilib.DigitalInput(9)
+
         #Initializing networktables
         self.smart_dashboard = NetworkTables.getTable("SmartDashboard")
         self.smart_dashboard.putNumber('robot_speed', 1)
-
+        self.smart_dashboard.putString('robot_name',"Zil1" if self.robotnumber else "Zil2")
+                
         # initialize and launch the camera
         wpilib.CameraServer.launch()
 
@@ -77,8 +81,12 @@ class StampedeRobot(wpilib.TimedRobot):
         self.encoder_wheel_right.setDistancePerPulse(self.kDistancePerPulse)
 
         #Initalizing drive motors
-        self.drive_l_motor = wpilib.Victor(portmap.motors.left_drive)
-        self.drive_r_motor = wpilib.Victor(portmap.motors.right_drive)
+        if self.robotnumber:
+            self.drive_l_motor = wpilib.Victor(portmap.motors.left_drive)
+            self.drive_r_motor = wpilib.Victor(portmap.motors.right_drive)
+        else:
+            self.drive_l_motor = wpilib.Spark(portmap.motors.left_drive)
+            self.drive_r_motor = wpilib.Spark(portmap.motors.right_drive)
 
         self.claw_l_motor = wpilib.Victor(portmap.motors.left_claw)
         self.claw_r_motor = wpilib.Victor(portmap.motors.right_claw)
@@ -88,6 +96,8 @@ class StampedeRobot(wpilib.TimedRobot):
         # initialize drive (differential drive is tank drive)
         self.drive = wpilib.drive.DifferentialDrive(self.drive_l_motor, self.drive_r_motor)
         self.drive.setExpiration(0.1)
+
+
 
         # joysticks 1 & 2 on the driver station
         self.left_stick = wpilib.Joystick(portmap.joysticks.left_joystick)
